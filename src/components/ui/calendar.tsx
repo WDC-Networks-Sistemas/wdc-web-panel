@@ -11,8 +11,9 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  locale,
   ...props
-}: CalendarProps) {
+}: CalendarProps & { locale?: any }) {
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}

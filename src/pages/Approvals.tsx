@@ -1,18 +1,20 @@
 
 import React from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import OrdersTable from '@/components/OrdersTable';
+import OrdersViewContainer from '@/components/OrdersViewContainer';
 
 const Approvals: React.FC = () => {
   return (
     <DashboardLayout>
-      <div className="p-8">
-        <div className="mb-8">
+      <div className="h-screen flex flex-col overflow-hidden">
+        <div className="p-8 pb-4">
           <h1 className="text-3xl font-bold text-gray-900">Aprovações de Pedidos</h1>
           <p className="text-gray-600 mt-2">Gerencie e aprove pedidos de clientes</p>
         </div>
 
-        <OrdersTable />
+        <div className="flex-1 overflow-hidden px-8 pb-8">
+          <OrdersViewContainer />
+        </div>
       </div>
     </DashboardLayout>
   );
