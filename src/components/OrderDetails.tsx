@@ -29,6 +29,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ open, onOpenChange }) => {
 
   const handleApprove = () => {
     updateOrderStatus(selectedOrder.id, 'approved');
+    onOpenChange(false);
   };
 
   const handleRejectClick = () => {
@@ -41,6 +42,9 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ open, onOpenChange }) => {
 
     // Log the reason (in a real app, you would save this to your backend)
     console.log(`Order ${selectedOrder.id} rejected with reason: ${reason}`);
+
+    // Close the parent modal after rejection is complete
+    onOpenChange(false);
   };
 
   const getStatusBadge = (status: Order['status']) => {
