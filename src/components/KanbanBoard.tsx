@@ -1,3 +1,4 @@
+'use client'
 import React, { useState, useMemo } from 'react';
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
 import { Draggable } from '@/components/Draggable';
@@ -88,7 +89,7 @@ import RejectOrderModal from '@/components/RejectOrderModal';
     setDetailsOpen(true);
   };
 
-  // Calculate total pages for each column
+  // Calculate total custompages for each column
   const pendingPages = Math.ceil(pendingOrders.length / ITEMS_PER_COLUMN);
   const approvedPages = Math.ceil(approvedOrders.length / ITEMS_PER_COLUMN);
   const rejectedPages = Math.ceil(rejectedOrders.length / ITEMS_PER_COLUMN);

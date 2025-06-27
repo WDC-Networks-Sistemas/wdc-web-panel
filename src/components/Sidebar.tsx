@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { BarChart3, FileCheck, Home, LogOut, User } from 'lucide-react';
 
 interface SidebarProps {
@@ -9,15 +10,14 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
-  const location = useLocation();
+  const pathname = usePathname();
 
   const menuItems = [
     { path: '/dashboard', icon: Home, label: 'Dashboard' },
     { path: '/dashboard/approvals', icon: FileCheck, label: 'Aprovações' },
-    { path: '/dashboard/analytics', icon: BarChart3, label: 'Análises' },
   ];
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => pathname === path;
 
   return (
     <div className={`${isCollapsed ? 'w-16' : 'w-64'} bg-white border-r border-gray-200 h-screen transition-all duration-300 flex flex-col`}>
@@ -42,7 +42,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
           {menuItems.map((item) => (
             <li key={item.path}>
               <Link
-                to={item.path}
+                href={item.path}
                 className={`flex items-center px-3 py-2 rounded-lg transition-colors ${
                   isActive(item.path)
                     ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600'
@@ -59,7 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
 
       <div className="p-4 border-t border-gray-200">
         <Link
-          to="/login"
+          href="/login"
           className="flex items-center px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
         >
           <LogOut className="w-5 h-5" />

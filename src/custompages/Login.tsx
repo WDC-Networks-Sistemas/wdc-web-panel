@@ -1,6 +1,6 @@
-
+'use client'
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,7 +11,7 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +20,7 @@ const Login: React.FC = () => {
     // Simulação de login
     setTimeout(() => {
       if (email === 'admin@example.com' && password === 'admin123') {
-        navigate('/dashboard');
+        router.push('/dashboard');
       } else {
         alert('Credenciais inválidas. Use admin@example.com / admin123');
       }

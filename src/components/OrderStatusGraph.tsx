@@ -1,16 +1,40 @@
+'use client'
+
 import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { useOrders } from '@/contexts/OrdersContext';
 
 interface OrderStatusGraphProps {
   customerName?: string;
+  branchId?: string; // New prop for branch filtering
 }
 
-const OrderStatusGraph: React.FC<OrderStatusGraphProps> = ({ customerName }) => {
-  const { orders, getCustomerOrders } = useOrders();
+const OrderStatusGraph: React.FC<OrderStatusGraphProps> = ({ customerName, branchId }) => {
+  const { 
+    orders, 
+    getCustomerOrders, 
+    getOrdersByBranch, 
+    getBranchOrders,
+    selectedBranch,
+    branches 
+  } = useOrders();
 
   const data = useMemo(() => {
-    const targetOrders = customerName ? getCustomerOrders(customerName) : orders;
+    let targetOrders = orders;
+
+    // Apply branch filtering
+    if (branchId) {
+      targetOrders = getOrdersByBranch(branchId);
+    } else if (selectedBranch) {
+      targetOrders = getBranchOrders();
+    }
+
+    // Apply customer filtering if specified
+    if (customerName) {
+      targetOrders = targetOrders.filter(order => 
+        order.customer.toLowerCase().includes(customerName.toLowerCase())
+      );
+    }
 
     // Count order statuses
     const statusCounts = targetOrders.reduce<Record<string, number>>(
@@ -27,23 +51,41 @@ const OrderStatusGraph: React.FC<OrderStatusGraphProps> = ({ customerName }) => 
       { name: 'Aprovado', value: statusCounts['approved'] || 0, color: '#10b981' },
       { name: 'Rejeitado', value: statusCounts['rejected'] || 0, color: '#ef4444' },
     ].filter(item => item.value > 0);
-  }, [orders, customerName, getCustomerOrders]);
+  }, [orders, customerName, branchId, selectedBranch, getOrdersByBranch, getBranchOrders]);
+
+  // Get branch name for display
+  const branchName = useMemo(() => {
+    const targetBranchId = branchId || selectedBranch;
+    if (!targetBranchId) return null;
+
+    const branch = branches.find(b => b.id === targetBranchId);
+    return branch?.name || null;
+  }, [branchId, selectedBranch, branches]);
 
   // If there's no data, don't render the chart
   if (data.length === 0) {
-    return null;
+    return (
+      <div className="h-[200px] w-full flex items-center justify-center text-gray-500">
+        <p>Nenhum pedido encontrado{branchName && ` para ${branchName}`}</p>
+      </div>
+    );
   }
 
   return (
-    <div className="h-[200px] w-full">
+    <div className="h-[200px] w-full" style={{ minHeight: '200px' }}>
+      {branchName && (
+        <div className="text-sm text-gray-600 mb-2 text-center">
+          Filial: {branchName}
+        </div>
+      )}
       <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
+        <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
           <Pie
             data={data}
             cx="50%"
             cy="50%"
-            innerRadius={60}
-            outerRadius={80}
+            innerRadius={50}
+            outerRadius={70}
             paddingAngle={5}
             dataKey="value"
             labelLine={false}
@@ -55,7 +97,7 @@ const OrderStatusGraph: React.FC<OrderStatusGraphProps> = ({ customerName }) => 
           <Tooltip 
             formatter={(value: number) => [`${value} pedido${value !== 1 ? 's' : ''}`, '']}
           />
-          <Legend />
+          <Legend verticalAlign="bottom" height={36} />
         </PieChart>
       </ResponsiveContainer>
     </div>

@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useMemo } from 'react';
 import { 
   Card, 
@@ -170,7 +172,7 @@ const ClientHistoryCard: React.FC = () => {
         )}
 
         {/* Status dos Pedidos */}
-        <div>
+        <div className="min-h-[220px]">
           <h4 className="font-medium text-sm mb-2 flex items-center gap-2">
             <PieChart className="h-4 w-4 text-gray-500" />
             Status dos Pedidos

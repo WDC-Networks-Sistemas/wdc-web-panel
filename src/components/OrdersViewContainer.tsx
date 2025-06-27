@@ -1,3 +1,4 @@
+'use client'
 import React, { useState } from 'react';
 import OrdersTable from '@/components/OrdersTable';
 import KanbanBoard from '@/components/KanbanBoard';

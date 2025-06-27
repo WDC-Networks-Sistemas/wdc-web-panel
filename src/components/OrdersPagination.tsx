@@ -23,7 +23,7 @@ const OrdersPagination: React.FC<OrdersPaginationProps> = ({ className }) => {
     const pageNumbers: (number | 'ellipsis')[] = [];
 
     if (totalPages <= 7) {
-      // Show all pages if there are 7 or fewer
+      // Show all custompages if there are 7 or fewer
       for (let i = 1; i <= totalPages; i++) {
         pageNumbers.push(i);
       }
@@ -36,7 +36,7 @@ const OrdersPagination: React.FC<OrdersPaginationProps> = ({ className }) => {
         pageNumbers.push('ellipsis');
       }
 
-      // Show pages around current page
+      // Show custompages around current page
       const startPage = Math.max(2, currentPage - 1);
       const endPage = Math.min(totalPages - 1, currentPage + 1);
 
