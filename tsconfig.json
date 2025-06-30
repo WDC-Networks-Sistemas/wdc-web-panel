@@ -12,6 +12,7 @@
         "./src/*"
       ]
     },
+    "allowSyntheticDefaultImports": true,
     "noImplicitAny": false,
     "noUnusedParameters": false,
     "skipLibCheck": true,
