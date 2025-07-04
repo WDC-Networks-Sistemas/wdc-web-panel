@@ -1,10 +1,19 @@
+import {APPROVAL_STATUS} from "@/constants";
+
+/**
+ * Interface for pending buy order API request parameters
+ */
 export interface PendingBuyOrderProps {
-    user_email: string;
-    date_begin?: string;
-    date_end?: string;
-    types: string;
+    UserEmail: string;
+    DateStart?: string;
+    DateEnd?: string;
+    Types: APPROVAL_STATUS;
+    TenantId: string;
 }
 
+/**
+ * Interface for individual order in pending buy orders
+ */
 export interface Order {
     Document: string;
     Type: string;
@@ -26,6 +35,9 @@ export interface Order {
     Observations: string,
 }
 
+/**
+ * Interface for pending buy order data
+ */
 export interface PendingBuyOrder {
     BranchCode: string;
     BranchName: string;
@@ -42,6 +54,9 @@ export interface PendingBuyOrder {
     Issues: Order[]
 }
 
-export interface BuyOrderResponse {
-    approval: PendingBuyOrder[]
+/**
+ * Interface for buy order API response
+ */
+export interface PendingBuyOrderResponse {
+    Approval: PendingBuyOrder[]
 }

@@ -8,6 +8,7 @@ import OrderDetails from '@/components/OrderDetails';
 import OrdersPagination from '@/components/OrdersPagination';
 import PageSizeSelector from '@/components/PageSizeSelector';
 import RejectOrderModal from '@/components/RejectOrderModal';
+import { APPROVAL_STATUS_UI as APPROVAL_STATUS, APPROVAL_STATUS_UI_LABELS as APPROVAL_STATUS_LABELS } from '@/constants/statusTypes';
 
 const OrdersTable: React.FC = () => {
   const { paginatedOrders, updateOrderStatus, updateOrderStatusWithReason, setSelectedOrder, pagination } = useOrders();
@@ -22,12 +23,18 @@ const OrdersTable: React.FC = () => {
 
   const getStatusBadge = (status: Order['status']) => {
     const variants = {
-      pending: { variant: 'secondary' as const, text: 'Pendente', icon: Clock },
-      approved: { variant: 'default' as const, text: 'Aprovado', icon: Check },
-      rejected: { variant: 'destructive' as const, text: 'Rejeitado', icon: X },
+      [APPROVAL_STATUS.PENDING]: { variant: 'secondary' as const, text: APPROVAL_STATUS_LABELS[APPROVAL_STATUS.PENDING], icon: Clock },
+      [APPROVAL_STATUS.WAITING_PREVIOUS_LEVEL]: { variant: 'secondary' as const, text: APPROVAL_STATUS_LABELS[APPROVAL_STATUS.WAITING_PREVIOUS_LEVEL], icon: Clock },
+      [APPROVAL_STATUS.APPROVED]: { variant: 'default' as const, text: APPROVAL_STATUS_LABELS[APPROVAL_STATUS.APPROVED], icon: Check },
+      [APPROVAL_STATUS.APPROVED_OTHER_APPROVER]: { variant: 'default' as const, text: APPROVAL_STATUS_LABELS[APPROVAL_STATUS.APPROVED_OTHER_APPROVER], icon: Check },
+      [APPROVAL_STATUS.REJECTED]: { variant: 'destructive' as const, text: APPROVAL_STATUS_LABELS[APPROVAL_STATUS.REJECTED], icon: X },
+      [APPROVAL_STATUS.BLOCKED]: { variant: 'destructive' as const, text: APPROVAL_STATUS_LABELS[APPROVAL_STATUS.BLOCKED], icon: X },
+      [APPROVAL_STATUS.REJECTED_BLOCKED_OTHER_APPROVER]: { variant: 'destructive' as const, text: APPROVAL_STATUS_LABELS[APPROVAL_STATUS.REJECTED_BLOCKED_OTHER_APPROVER], icon: X },
     };
 
-    const { variant, text, icon: Icon } = variants[status];
+    // Default to pending if status is not recognized
+    const statusData = variants[status] || variants[APPROVAL_STATUS.PENDING];
+    const { variant, text, icon: Icon } = statusData;
 
     return (
       <Badge variant={variant} className="flex items-center gap-1">
@@ -38,7 +45,7 @@ const OrdersTable: React.FC = () => {
   };
 
   const handleApprove = (id: string) => {
-    updateOrderStatus(id, 'approved');
+    updateOrderStatus(id, APPROVAL_STATUS.APPROVED);
   };
 
   const handleRejectClick = (order: Order) => {
@@ -49,7 +56,7 @@ const OrdersTable: React.FC = () => {
   const handleRejectConfirm = async (reason: string) => {
     if (orderToReject) {
       // Use the enhanced function that stores the rejection reason
-      updateOrderStatusWithReason(orderToReject.id, 'rejected', reason);
+      updateOrderStatusWithReason(orderToReject.id, APPROVAL_STATUS.REJECTED, reason);
 
       setOrderToReject(null);
     }
@@ -101,7 +108,7 @@ const OrdersTable: React.FC = () => {
                   {new Date(order.date).toLocaleDateString('pt-BR')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {order.status === 'pending' && (
+                  {(order.status === APPROVAL_STATUS.PENDING || order.status === APPROVAL_STATUS.WAITING_PREVIOUS_LEVEL) && (
                     <div className="flex space-x-2">
                       <Button
                         size="sm"

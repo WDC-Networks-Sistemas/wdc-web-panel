@@ -16,6 +16,9 @@ import {
 } from 'lucide-react';
 import { Order, useOrders } from '@/contexts/OrdersContext';
 import RejectOrderModal from '@/components/RejectOrderModal';
+import { APPROVAL_STATUS } from '@/constants/approvalStatus';
+import { isPendingStatus } from '@/constants/approvalStatus';
+import { getStatusBadge } from '@/utils/statusBadge';
 
 interface OrderDetailsProps {
   open: boolean;
@@ -23,14 +26,26 @@ interface OrderDetailsProps {
 }
 
 const OrderDetails: React.FC<OrderDetailsProps> = ({ open, onOpenChange }) => {
-  const { selectedOrder, updateOrderStatus } = useOrders();
+  const { selectedOrder, approveOrder, rejectOrder } = useOrders();
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!selectedOrder) return null;
 
-  const handleApprove = () => {
-    updateOrderStatus(selectedOrder.id, 'approved');
-    onOpenChange(false);
+  const handleApprove = async () => {
+    try {
+      setIsSubmitting(true);
+      await approveOrder(
+        selectedOrder.id,
+        selectedOrder.approverCode || '',
+        selectedOrder.branchCode
+      );
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error approving order:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleRejectClick = () => {
@@ -38,32 +53,23 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ open, onOpenChange }) => {
   };
 
   const handleRejectConfirm = async (reason: string) => {
-    // Update the order status to rejected
-    updateOrderStatus(selectedOrder.id, 'rejected');
-
-    // Log the reason (in a real app, you would save this to your backend)
-    console.log(`Order ${selectedOrder.id} rejected with reason: ${reason}`);
-
-    // Close the parent modal after rejection is complete
-    onOpenChange(false);
+    try {
+      setIsSubmitting(true);
+      await rejectOrder(
+        selectedOrder.id,
+        selectedOrder.approverCode || '',
+        selectedOrder.branchCode,
+        reason
+      );
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error rejecting order:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const getStatusBadge = (status: Order['status']) => {
-    const variants = {
-      pending: { variant: 'secondary' as const, text: 'Pendente', icon: Clock },
-      approved: { variant: 'default' as const, text: 'Aprovado', icon: Check },
-      rejected: { variant: 'destructive' as const, text: 'Rejeitado', icon: X },
-    };
-
-    const { variant, text, icon: Icon } = variants[status];
-
-    return (
-      <Badge variant={variant} className="flex items-center gap-1">
-        <Icon className="w-3 h-3" />
-        {text}
-      </Badge>
-    );
-  };
+  // Using the getStatusBadge utility function imported from @/utils/statusBadge
 
   return (
     <>
@@ -91,7 +97,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ open, onOpenChange }) => {
             <div className="flex items-start gap-2">
               <User className="h-5 w-5 text-gray-500 mt-0.5" />
               <div>
-                <p className="text-sm font-medium">Cliente</p>
+                <p className="text-sm font-medium">Cliente/Grupo</p>
                 <p className="text-sm text-gray-700">{selectedOrder.customer}</p>
               </div>
             </div>
@@ -117,119 +123,81 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ open, onOpenChange }) => {
             <div className="flex items-start gap-2">
               <Calendar className="h-5 w-5 text-gray-500 mt-0.5" />
               <div>
-                <p className="text-sm font-medium">Data</p>
+                <p className="text-sm font-medium">Data de Emissão</p>
                 <p className="text-sm text-gray-700">
                   {new Date(selectedOrder.date).toLocaleDateString('pt-BR')}
                 </p>
               </div>
             </div>
 
-            {selectedOrder.phone && (
+            <div className="flex items-start gap-2">
+              <MapPin className="h-5 w-5 text-gray-500 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium">Filial</p>
+                <p className="text-sm text-gray-700">{selectedOrder.branchName}</p>
+              </div>
+            </div>
+
+            {selectedOrder.type && (
               <div className="flex items-start gap-2">
-                <Phone className="h-5 w-5 text-gray-500 mt-0.5" />
+                <FileText className="h-5 w-5 text-gray-500 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium">Telefone</p>
-                  <p className="text-sm text-gray-700">{selectedOrder.phone}</p>
+                  <p className="text-sm font-medium">Tipo</p>
+                  <p className="text-sm text-gray-700">{selectedOrder.type}</p>
                 </div>
               </div>
             )}
 
-            {selectedOrder.paymentMethod && (
+            {selectedOrder.level && (
               <div className="flex items-start gap-2">
-                <CreditCard className="h-5 w-5 text-gray-500 mt-0.5" />
+                <User className="h-5 w-5 text-gray-500 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium">Forma de Pagamento</p>
-                  <p className="text-sm text-gray-700">
-                    {{
-                      'credit': 'Cartão de Crédito',
-                      'debit': 'Cartão de Débito',
-                      'cash': 'Dinheiro',
-                      'bank_transfer': 'Transferência Bancária'
-                    }[selectedOrder.paymentMethod]}
-                  </p>
+                  <p className="text-sm font-medium">Nível de Aprovação</p>
+                  <p className="text-sm text-gray-700">{selectedOrder.level}</p>
                 </div>
               </div>
             )}
           </div>
 
-          {selectedOrder.address && (
-            <div className="flex items-start gap-2 mt-2">
-              <MapPin className="h-5 w-5 text-gray-500 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium">Endereço</p>
-                <p className="text-sm text-gray-700">{selectedOrder.address}</p>
-              </div>
-            </div>
-          )}
-
-          {selectedOrder.items && selectedOrder.items.length > 0 && (
-            <div className="mt-4">
-              <div className="flex items-center gap-2 mb-2">
-                <ShoppingCart className="h-5 w-5 text-gray-500" />
-                <h3 className="text-sm font-medium">Itens do Pedido</h3>
-              </div>
-              <div className="bg-gray-50 rounded-md p-3">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left pb-2 font-medium text-gray-600">Item</th>
-                      <th className="text-center pb-2 font-medium text-gray-600">Qtd</th>
-                      <th className="text-right pb-2 font-medium text-gray-600">Preço</th>
-                      <th className="text-right pb-2 font-medium text-gray-600">Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedOrder.items.map((item, index) => (
-                      <tr key={index} className="border-b border-gray-100 last:border-0">
-                        <td className="py-2">{item.name}</td>
-                        <td className="py-2 text-center">{item.quantity}</td>
-                        <td className="py-2 text-right">
-                          R$ {item.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                        </td>
-                        <td className="py-2 text-right font-medium">
-                          R$ {(item.quantity * item.price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <td colSpan={3} className="pt-2 text-right font-medium">Total:</td>
-                      <td className="pt-2 text-right font-bold">
-                        R$ {selectedOrder.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {selectedOrder.notes && (
+          {selectedOrder.observations && (
             <div className="flex items-start gap-2 mt-2">
               <FileText className="h-5 w-5 text-gray-500 mt-0.5" />
               <div>
                 <p className="text-sm font-medium">Observações</p>
-                <p className="text-sm text-gray-700">{selectedOrder.notes}</p>
+                <p className="text-sm text-gray-700">{selectedOrder.observations}</p>
               </div>
             </div>
           )}
         </div>
 
         <DialogFooter className="flex justify-between sm:justify-between">
-          {selectedOrder.status === 'pending' && (
+          {isPendingStatus(selectedOrder.status) && (
             <div className="flex gap-2">
               <Button 
                 variant="default" 
                 onClick={handleApprove}
                 className="bg-green-600 hover:bg-green-700"
+                disabled={isSubmitting}
               >
-                <Check className="w-4 h-4 mr-2" />
-                Aprovar
+                {isSubmitting ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processando...
+                  </span>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4 mr-2" />
+                    Aprovar
+                  </>
+                )}
               </Button>
               <Button 
                 variant="destructive" 
                 onClick={handleRejectClick}
+                disabled={isSubmitting}
               >
                 <X className="w-4 h-4 mr-2" />
                 Rejeitar
@@ -237,7 +205,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ open, onOpenChange }) => {
             </div>
           )}
           <DialogClose asChild>
-            <Button type="button" variant="outline">
+            <Button type="button" variant="outline" disabled={isSubmitting}>
               Fechar
             </Button>
           </DialogClose>
