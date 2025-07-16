@@ -9,6 +9,12 @@ export default {
       tsconfig: 'tsconfig.json',
     }],
   },
+  globals:{
+    'ts-jest': {
+      tsconfig: 'tsconfig.json',
+    },
+    crypto: require('crypto'),
+  },
   testMatch: [
     '<rootDir>/src/tests/**/*.test.(ts|tsx)'
   ],
